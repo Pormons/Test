@@ -1,4 +1,4 @@
-# Use PHP 8.2 FPM base image
+# Base image
 FROM php:8.2-fpm
 
 # Install system dependencies
@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     && docker-php-ext-install pdo_pgsql zip
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Install Node.js 20 for Vite
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -27,13 +30,13 @@ RUN composer install --no-dev --optimize-autoloader
 COPY package*.json ./
 RUN npm install && npm run build
 
-# Copy rest of the app
+# Copy the rest of the app
 COPY . .
 
-# Set permissions for storage and cache
+# Set permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Expose Laravel port
+# Expose port 8000
 EXPOSE 8000
 
 # Start Laravel
