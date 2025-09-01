@@ -1,4 +1,4 @@
-# Base image
+# Use PHP 8.2 FPM base image
 FROM php:8.2-fpm
 
 # Install system dependencies
@@ -22,18 +22,21 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files and install dependencies
+# Copy composer files and install dependencies without scripts
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Copy package.json and install frontend dependencies
+# Copy the rest of the project
+COPY . .
+
+# Run Laravel post-autoload scripts
+RUN php artisan package:discover
+
+# Install frontend dependencies and build assets
 COPY package*.json ./
 RUN npm install && npm run build
 
-# Copy the rest of the app
-COPY . .
-
-# Set permissions
+# Set permissions for storage and cache
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 # Expose port 8000
